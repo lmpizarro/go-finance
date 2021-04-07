@@ -66,19 +66,20 @@ func main() {
 	format0 := "%6s, %6s, %8s, %8s, %8s, %6s, %6s, %8s, %12s\n"
 	fmt.Printf(format0, "tckt", "epsTr12", "epsFw", "trPE", "fwPE", "BkV", "PrtBk", "mktPr", "pcEps")
 
-	for _, equity := range equities {
-		printEquity(equity)
+	for i, equity := range equities {
+
+		printEquity(i, equity)
 	}
 }
 
-func printEquity(eqo finance.Equity) {
+func printEquity(i int, eqo finance.Equity) {
 
 	// Price/share = PriceToBook/BookValue
 	// pcEPS = epsFw / Price / share
 
 	pcEPS := 100 * eqo.EpsForward / (eqo.PriceToBook * eqo.BookValue)
 
-	format1 := "%6s, %6.2f, %8.2f, %8.2f, %8.2f, "
+	format1 := "%2d %6s, %6.2f, %8.2f, %8.2f, %8.2f, "
 	format2 := "%6.2f, %6.2f, %10.2e, %8.2f\n"
 
 	if eqo.EpsTrailingTwelveMonths > 999 {
@@ -89,7 +90,7 @@ func printEquity(eqo finance.Equity) {
 		eqo.BookValue = 999
 	}
 
-	fmt.Printf(format1, eqo.Symbol,
+	fmt.Printf(format1, i, eqo.Symbol,
 		eqo.EpsTrailingTwelveMonths,
 		eqo.EpsForward,
 		eqo.TrailingPE,
@@ -120,4 +121,3 @@ func reverse(equities []finance.Equity) {
 		equities[i], equities[j] = equities[j], equities[i]
 	}
 }
-

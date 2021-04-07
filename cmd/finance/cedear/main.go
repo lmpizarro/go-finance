@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"strconv"
 
 	"github.com/montanaflynn/stats"
 	"github.com/piquette/finance-go/chart"
@@ -28,12 +27,6 @@ type Cedear struct {
 	value    float64
 }
 
-// FloatToString ...
-func FloatToString(num float64) string {
-	// to convert a float number to a string
-	return strconv.FormatFloat(num, 'f', 6, 64)
-}
-
 func main() {
 
 	var cedears []Cedear
@@ -46,12 +39,12 @@ func main() {
 
 	// Loop through lines & turn into object
 	for _, line := range lines {
-		ratio, err := strconv.ParseFloat(line[1], 64)
+		ratio, err := utils.StringToFloat64(line[1])
 		if err != nil {
 			// panic(err)
 			continue
 		}
-		quantity, err := strconv.ParseFloat(line[2], 64)
+		quantity, err := utils.StringToFloat64(line[2])
 		if err != nil {
 			// panic(err)
 			continue
@@ -75,8 +68,7 @@ func main() {
 
 		// printCedear(data)
 
-		pcfutearn := 	100 * quo.EpsForward / quo.RegularMarketPrice 
-		
+		pcfutearn := 100 * quo.EpsForward / quo.RegularMarketPrice
 
 		fmt.Printf("%8s %8.2f %8.2f %8.2f", quo.Symbol, math.Logb(float64(quo.MarketCap)), quo.TrailingPE, quo.ForwardPE)
 		fmt.Printf(" %8.2f %8.2f %8.2f %8.2f\n", quo.EpsForward, pcfutearn, quo.PriceToBook, quo.TrailingAnnualDividendYield)
@@ -95,7 +87,7 @@ func main() {
 	fmt.Printf("\n portfolioValue %f \n", pfv)
 
 	start := datetime.Datetime{Month: 10, Day: 10, Year: 2020}
-	end := datetime.Datetime{Month: 2, Day: 10, Year: 2021}
+	end := datetime.Datetime{Month: 3, Day: 31, Year: 2021}
 
 	printHeader()
 

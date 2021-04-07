@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"strconv"
 	"encoding/csv"
 	"os"
 )
@@ -23,4 +24,20 @@ func ReadCsv(filename string) ([][]string, error) {
 	}
 
 	return lines, nil
+}
+
+
+// FloatToString ...
+func FloatToString(num float64) string {
+	// to convert a float number to a string
+	return strconv.FormatFloat(num, 'f', 6, 64)
+}
+
+func StringToFloat64(nums string) (float64, error) {
+		num, err := strconv.ParseFloat(nums, 64)
+		if err != nil {
+			 panic(err)
+		}
+
+	return num, err
 }
