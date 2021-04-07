@@ -59,6 +59,7 @@ func main() {
 		equities = append(equities, *q)
 	}
 
+	// ordeno para
 	sort.Sort(ByMktCap(equities))
 	reverse(equities)
 
