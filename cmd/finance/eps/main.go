@@ -22,7 +22,8 @@ pcEPS = epsFw / Price / share
 import (
 	"fmt"
 
-	"sort"
+	// "sort"
+	"strings"
 
 	"github.com/lmpizarro/go-finance/pkg/utils"
 	"github.com/piquette/finance-go"
@@ -37,39 +38,43 @@ func (a ByMktCap) Less(i, j int) bool { return a[i].MarketCap < a[j].MarketCap }
 
 func main() {
 
-	var equities []finance.Equity
+	// var equities []finance.Equity
 	var symbols []string
 
-	lines, err := utils.ReadCsv("tickets.csv")
+	lines, err := utils.ReadCsv("dow.csv")
 	if err != nil {
 		panic(err)
 	}
 
 	for _, line := range lines {
-		symbols = append(symbols, line[0])
+		symbols = append(symbols, strings.TrimSpace(line[0]))
 	}
 
 	symbols = removeDuplicateValues(symbols)
 
-	for _, symbol := range symbols {
+	format0 := "%6s, %6s, %8s, %8s, %8s, %6s, %6s, %8s, %12s %8s\n"
+	fmt.Printf(format0, "tckt", "epsTr12", "epsFw", "trPE", 
+	                     "fwPE", "BkV", "PrtBk", "mktPr", "pcEps", "div")
+
+
+	for i, symbol := range symbols {
 		q, err := eqt.Get(symbol)
 		if err != nil {
-			panic(err)
+		    panic(err)	
 		}
-		equities = append(equities, *q)
+		// equities = append(equities, *q)
+		printEquity(i, *q)
 	}
 
-	// ordeno para
+	/* ordeno para
 	sort.Sort(ByMktCap(equities))
+
 	reverse(equities)
 
-	format0 := "%6s, %6s, %8s, %8s, %8s, %6s, %6s, %8s, %12s\n"
-	fmt.Printf(format0, "tckt", "epsTr12", "epsFw", "trPE", "fwPE", "BkV", "PrtBk", "mktPr", "pcEps")
-
 	for i, equity := range equities {
-
 		printEquity(i, equity)
 	}
+	*/
 }
 
 func printEquity(i int, eqo finance.Equity) {
@@ -80,7 +85,7 @@ func printEquity(i int, eqo finance.Equity) {
 	pcEPS := 100 * eqo.EpsForward / (eqo.PriceToBook * eqo.BookValue)
 
 	format1 := "%2d %6s, %6.2f, %8.2f, %8.2f, %8.2f, "
-	format2 := "%6.2f, %6.2f, %10.2e, %8.2f\n"
+	format2 := "%6.2f, %6.2f, %10.2e, %8.2f %8.2f\n"
 
 	if eqo.EpsTrailingTwelveMonths > 999 {
 		eqo.EpsTrailingTwelveMonths = 999
@@ -90,6 +95,8 @@ func printEquity(i int, eqo finance.Equity) {
 		eqo.BookValue = 999
 	}
 
+	div := 100 * eqo.TrailingAnnualDividendYield
+
 	fmt.Printf(format1, i, eqo.Symbol,
 		eqo.EpsTrailingTwelveMonths,
 		eqo.EpsForward,
@@ -97,7 +104,7 @@ func printEquity(i int, eqo finance.Equity) {
 		eqo.ForwardPE)
 	fmt.Printf(format2, eqo.BookValue,
 		eqo.PriceToBook,
-		float64(eqo.MarketCap), pcEPS)
+		float64(eqo.MarketCap), pcEPS, div)
 }
 
 func removeDuplicateValues(stringSlice []string) []string {

@@ -13,23 +13,15 @@ import (
 
 	"log"
 
+	"github.com/lmpizarro/go-finance/pkg/cedear"
 	"github.com/lmpizarro/go-finance/pkg/utils"
 
 	"math"
 )
 
-// Cedear ...
-type Cedear struct {
-	ticket   string
-	ratio    float64
-	price    float64
-	quantity float64
-	value    float64
-}
-
 func main() {
 
-	var cedears []Cedear
+	var cedears []cedear.Cedear
 	var errormessages []string
 
 	lines, err := utils.ReadCsv("cedear.csv")
@@ -37,6 +29,7 @@ func main() {
 		panic(err)
 	}
 
+	fmt.Printf("%8s %8s %8s %8s %8s %8s %8s %8s\n", "tick", "mrkCap", "trPE", "fwPE", "fwEPS", "pcfut", "PrBk", "Div")
 	// Loop through lines & turn into object
 	for _, line := range lines {
 		ratio, err := utils.StringToFloat64(line[1])
@@ -57,16 +50,14 @@ func main() {
 			continue
 		}
 
-		data := Cedear{
-			ticket:   line[0],
-			ratio:    ratio,
-			quantity: quantity,
-			price:    quo.RegularMarketPrice,
+		data := cedear.Cedear{
+			Ticket:   line[0],
+			Ratio:    ratio,
+			Quantity: quantity,
+			Price:    quo.RegularMarketPrice,
 		}
 
-		data.value = calcValue(data)
-
-		// printCedear(data)
+		data.Value = calcValue(data)
 
 		pcfutearn := 100 * quo.EpsForward / quo.RegularMarketPrice
 
@@ -94,7 +85,7 @@ func main() {
 	for _, c := range cedears {
 		err = historical(c, start, end)
 		if err != nil {
-			message := fmt.Sprintf("historical error %s\n", c.ticket)
+			message := fmt.Sprintf("historical error %s\n", c.Ticket)
 			errormessages = append(errormessages, message)
 			continue
 		}
@@ -106,10 +97,10 @@ func main() {
 	}
 }
 
-func historical(quote Cedear, start, end datetime.Datetime) error {
+func historical(quote cedear.Cedear, start, end datetime.Datetime) error {
 
 	p := &chart.Params{
-		Symbol:   quote.ticket,
+		Symbol:   quote.Ticket,
 		Start:    &start,
 		End:      &end,
 		Interval: datetime.OneDay,
@@ -133,11 +124,11 @@ func historical(quote Cedear, start, end datetime.Datetime) error {
 	min, _ := stats.Min(values)
 	max, _ := stats.Max(values)
 	mean, _ := stats.Mean(values)
-	desviacion := 100 * (quote.price - mean) / mean
+	desviacion := 100 * (quote.Price - mean) / mean
 	std = 100 * std / mean
 
 	fmt.Printf("%10s %10.2f %10.2f %10.2f %10.2f %10.2f %10.2f\n",
-		quote.ticket, std, min, max, desviacion, mean, quote.price)
+		quote.Ticket, std, min, max, desviacion, mean, quote.Price)
 
 	// Catch an error, if there was one.
 	if iter.Err() != nil {
@@ -161,21 +152,21 @@ func printHeader() {
 	// %10.2f %10.2f %10.2f %10.2f %10.2f \n", )
 }
 
-func printCedear(c Cedear) {
-	fmt.Printf("%10s %10.2f %10.2f %10.2f %10.2f\n", c.ticket, c.ratio, c.quantity, c.price, c.value)
+func printCedear(c cedear.Cedear) {
+	fmt.Printf("%10s %10.2f %10.2f %10.2f %10.2f\n", c.Ticket, c.Ratio, c.Quantity, c.Price, c.Value)
 }
 
-func calcPortFolioValue(c []Cedear) float64 {
+func calcPortFolioValue(c []cedear.Cedear) float64 {
 
 	portFolioValue := 0.0
 
 	for _, ced := range c {
-		portFolioValue = portFolioValue + ced.value
+		portFolioValue = portFolioValue + ced.Value
 	}
 
 	return portFolioValue
 }
 
-func calcValue(c Cedear) float64 {
-	return c.price * c.quantity / c.ratio
+func calcValue(c cedear.Cedear) float64 {
+	return c.Price * c.Quantity / c.Ratio
 }
