@@ -24,7 +24,7 @@ func main() {
 	var cedears []cedear.Cedear
 	var errormessages []string
 
-	lines, err := utils.ReadCsv("cedear.csv")
+	lines, err := utils.ReadCsv("../csvs/cedear.csv")
 	if err != nil {
 		panic(err)
 	}
