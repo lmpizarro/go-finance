@@ -16,7 +16,7 @@ import (
 	"github.com/lmpizarro/go-finance/pkg/cedear"
 	"github.com/lmpizarro/go-finance/pkg/utils"
 
-	"math"
+	
 )
 
 func main() {
@@ -29,7 +29,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Printf("%8s %8s %8s %8s %8s %8s %8s %8s\n", "tick", "mrkCap", "trPE", "fwPE", "fwEPS", "pcfut", "PrBk", "Div")
+	fmt.Printf("%8s %10s %8s %8s %8s %8s %8s %8s\n", "tick", "mrkCap", "trPE", "fwPE", "fwEPS", "pcfut", "PrBk", "Div")
 	// Loop through lines & turn into object
 	for _, line := range lines {
 		ratio, err := utils.StringToFloat64(line[1])
@@ -61,8 +61,8 @@ func main() {
 
 		pcfutearn := 100 * quo.EpsForward / quo.RegularMarketPrice
 
-		fmt.Printf("%8s %8.2f %8.2f %8.2f", quo.Symbol, math.Logb(float64(quo.MarketCap)), quo.TrailingPE, quo.ForwardPE)
-		fmt.Printf(" %8.2f %8.2f %8.2f %8.2f\n", quo.EpsForward, pcfutearn, quo.PriceToBook, quo.TrailingAnnualDividendYield)
+		fmt.Printf("%8s %10.2e %8.2f %8.2f", quo.Symbol, float64(quo.MarketCap), quo.TrailingPE, quo.ForwardPE)
+		fmt.Printf(" %8.2f %8.2f %8.2f %8.2f\n", quo.EpsForward, pcfutearn, quo.PriceToBook, 100*quo.TrailingAnnualDividendYield)
 		cedears = append(cedears, data)
 	}
 
@@ -77,8 +77,8 @@ func main() {
 
 	fmt.Printf("\n portfolioValue %f \n", pfv)
 
-	start := datetime.Datetime{Month: 10, Day: 10, Year: 2020}
-	end := datetime.Datetime{Month: 3, Day: 31, Year: 2021}
+	start := datetime.Datetime{Month: 5, Day: 28, Year: 2020}
+	end := datetime.Datetime{Month: 5, Day: 28, Year: 2021}
 
 	printHeader()
 
@@ -140,7 +140,7 @@ func historical(quote cedear.Cedear, start, end datetime.Datetime) error {
 }
 
 func printHeader() {
-	header := [7]string{"ticket", "stdpu", "min", "max", "devi", "mean", "price"}
+	header := []string{"ticket", "stdpu", "min", "max", "devi", "mean", "price"}
 
 	fmt.Printf("\n %10s", header[0])
 

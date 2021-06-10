@@ -9,8 +9,17 @@ import (
 	"strings"
 )
 
-func search_etf(etf, file__ string) {
+type EtfInCedear struct {
+	Etf string
+	Weight float64
+}
 
+var map_etf_cedear map[string]EtfInCedear
+
+
+func search_etf(etf, file__ string) map[string]EtfInCedear{
+
+    map_etf_cedear := make(map[string]EtfInCedear)
 	map_ticket_weight := make(map[string]float64)
 
 	file, err := os.Open(file__)
@@ -46,27 +55,34 @@ func search_etf(etf, file__ string) {
 
 	scanner2 := bufio.NewScanner(file1)
 	scanner2.Split(bufio.ScanLines)
-	var text2 []string
+	var cedears_ticket []string
 
 	for scanner2.Scan() {
-		text2 = append(text2, scanner2.Text())
+		cedears_ticket = append(cedears_ticket, scanner2.Text())
 	}
 
-	for _, each_ln := range text2 {
+	for _, each_ln := range cedears_ticket {
 		// fields := strings.Fields(each_ln)
 		symbol := strings.TrimSpace(each_ln)
 
 		v, ok := map_ticket_weight[symbol]
 		if ok {
-			fmt.Println(etf, symbol, v)
+			fmt.Println(symbol, v, etf)
+
+			_, has := map_etf_cedear[symbol]
+			if !has {
+				map_etf_cedear[symbol] = EtfInCedear{Etf: etf, Weight: v}
+			}
 		}
 	}
 
+	return map_etf_cedear
 
 }
 
 func main() {
 	map_etf_file := make(map[string]string)
+    map_etf_cedear := make(map[string]EtfInCedear)
 
 	map_etf_file["arkf"] = "arkf.txt"
 	map_etf_file["arkg"] = "arkg.txt"
@@ -76,9 +92,26 @@ func main() {
 	map_etf_file["arkx"] = "arkx.txt"
 
 	for key, value := range map_etf_file {
-		search_etf(key, value)
+		map_e := search_etf(key, value)
+
+		for k, v := range map_e {
+			vv, has := map_etf_cedear[k]
+			if !has{
+				map_etf_cedear[k] = v
+			}else{
+				if vv.Weight > v.Weight{
+					map_etf_cedear[k] = vv
+				}else{
+					map_etf_cedear[k] = v
+				}
+			}
+		}
 	}
 
 
+	fmt.Printf("\n\n\n")
+	for kk, vv := range map_etf_cedear{
+    	fmt.Println(kk, vv.Weight, vv.Etf)
 
+	}
 }

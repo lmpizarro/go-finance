@@ -12,7 +12,7 @@ import (
 
 func main() {
 
-	lines, err := utils.ReadCsv("../cedear/dow.csv")
+	lines, err := utils.ReadCsv("../cedear/cedear.csv")
 	if err != nil {
 		panic(err)
 	}

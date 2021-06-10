@@ -36,7 +36,8 @@ func FloatToString(num float64) string {
 func StringToFloat64(nums string) (float64, error) {
 		num, err := strconv.ParseFloat(nums, 64)
 		if err != nil {
-			 panic(err)
+			 //panic(err)
+			 return 0.0, err
 		}
 
 	return num, err
