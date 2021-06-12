@@ -22,7 +22,7 @@ func search_etf(etf, file__ string) map[string]EtfInCedear{
     map_etf_cedear := make(map[string]EtfInCedear)
 	map_ticket_weight := make(map[string]float64)
 
-	file, err := os.Open(file__)
+	file, err := os.Open("june/" + file__)
 	if err != nil {
 		log.Fatalf("failed to open")
 
