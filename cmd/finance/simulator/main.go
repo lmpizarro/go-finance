@@ -42,7 +42,7 @@ func main() {
 	}
 
 	timestamps := make([]string, 0, len(thisMap))
-	for timestamp, _ := range thisMap {
+	for timestamp := range thisMap {
 		timestamps = append(timestamps, timestamp)
 	}
 

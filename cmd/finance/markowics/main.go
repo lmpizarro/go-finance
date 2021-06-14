@@ -37,7 +37,7 @@ func test() {
 }
 
 func main() {
-	start := datetime.Datetime{Month: 6, Day: 1, Year: 2021}
+    start := datetime.Datetime{Month: 1, Day: 1, Year: 2020}
 	end := datetime.Datetime{Month: 6, Day: 12, Year: 2021}
 
 	file := "pep.csv"
@@ -94,11 +94,24 @@ func main() {
 	quant.MatPrint("final", bb)
 
 	logReturn := quant.LogReturn(bb)
-
 	cov := quant.Covariance(&logReturn)
 
 	fmt.Println(tt)
 	quant.MatPrint("cov", &cov)
 
+	var data []float64
 
+	for i := 0; i < len(thisMap); i++ {
+		data = append(data, 1.0 / float64(len(thisMap)) )				
+	} 
+	vv := mat.NewVecDense(len(thisMap), data )
+
+	cc := mat.NewVecDense(len(thisMap), nil)
+	cc.MulVec(&cov, vv)
+
+	dd := mat.NewVecDense(1, nil)
+
+	dd.MulVec(vv.T(), cc)
+
+	quant.MatPrint("var", dd)
 }
