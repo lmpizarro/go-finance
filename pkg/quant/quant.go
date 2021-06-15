@@ -85,3 +85,36 @@ func Mean(a *mat.Dense) mat.VecDense {
 	}
 	return *columnsMean
 }
+
+func Variance(a *mat.Dense) mat.VecDense {
+	_, cN := a.Dims()
+	columnsVar := mat.NewVecDense(cN, nil)
+
+	var dst []float64
+	for i := 0; i < cN; i++ {
+		columnsVar.SetVec(i, stat.Variance(mat.Col(dst, i, a), nil))
+	}
+	return *columnsVar
+}
+
+func Normalize(a *mat.Dense) *mat.Dense {
+
+	rN, cN := a.Dims()
+
+	normal := mat.NewDense(rN, cN, nil)
+
+	mean := Mean(a)
+	variance := Variance(a)
+
+	for i := 0; i < rN; i++ {
+		for j := 0; j < cN; j++ {
+
+			normal.Set(i, j, (a.At(i,j) - mean.AtVec(j)))
+			if variance.AtVec(j) != 0.0 {
+			    normal.Set(i, j, (a.At(i,j) - mean.AtVec(j)) / variance.AtVec(j))
+			}
+		}
+	}
+
+	return normal
+}
