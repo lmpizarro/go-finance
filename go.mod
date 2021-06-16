@@ -13,5 +13,6 @@ require (
 	github.com/montanaflynn/stats v0.6.4
 	github.com/piquette/finance-go v1.0.0
 	github.com/shopspring/decimal v1.2.0
+	github.com/sjwhitworth/golearn v0.0.0-20210511113939-00d4cfd91a1b
 	gonum.org/v1/gonum v0.9.1
 )

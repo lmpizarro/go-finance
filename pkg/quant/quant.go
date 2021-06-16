@@ -70,20 +70,39 @@ func Covariance(a *mat.Dense) mat.SymDense {
 	var cov mat.SymDense
 	cov.SymOuterK(1, b)
 
-	stat.CovarianceMatrix(&cov, a, nil)
+	stat.CorrelationMatrix(&cov, a, nil)
 
 	return cov
 }
 
 func Mean(a *mat.Dense) mat.VecDense {
-	_, cN := a.Dims()
+	rN, cN := a.Dims()
 	columnsMean := mat.NewVecDense(cN, nil)
 
 	var dst []float64
 	for i := 0; i < cN; i++ {
-		columnsMean.SetVec(i, stat.Mean(mat.Col(dst, i, a), nil))
+		columnsMean.SetVec(i, float64(rN) * stat.Mean(mat.Col(dst, i, a), nil))
 	}
 	return *columnsMean
+}
+
+func Returns(mean *mat.VecDense, comp *mat.VecDense) float64 {
+
+	rN, _ := mean.Dims()
+
+	rnC, _ := comp.Dims()
+
+	if rN != rnC {
+		panic("error")
+	}
+
+	ret := 0.0
+
+	for i := 0; i < rN; i++ {
+		ret += mean.AtVec(i) * comp.AtVec(i)
+	}
+
+	return float64(rN) * ret
 }
 
 func Variance(a *mat.Dense) mat.VecDense {

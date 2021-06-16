@@ -2,14 +2,18 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"sort"
+	"time"
 
 	"github.com/lmpizarro/go-finance/pkg/quant"
 	"gonum.org/v1/gonum/mat"
 
 	ced "github.com/lmpizarro/go-finance/pkg/cedear"
 	"github.com/piquette/finance-go/datetime"
+
+	pcca "github.com/sjwhitworth/golearn/pca"
 )
 
 func test() {
@@ -33,7 +37,17 @@ func test() {
 	columnsMean := quant.Mean(a)
 
 	quant.MatPrint("mean", &columnsMean)
+	nP := mat.NewDense(8, 2, nil)
 
+	for i := 0; i < 8; i++ {
+		for j := 0; j < 2; j++ {
+			nP.Set(i, j, float64(i*(j+1)))
+		}
+	}
+
+	normal := quant.Normalize(nP)
+
+	quant.MatPrint("normal", normal)
 }
 
 func GetPrices(fileAssetNames string, start, end datetime.Datetime) (*mat.Dense, []string) {
@@ -41,15 +55,15 @@ func GetPrices(fileAssetNames string, start, end datetime.Datetime) (*mat.Dense,
 	cedears := ced.ReadCedear(fileAssetNames)
 	mapAssetNametoTimeValues := make(map[string]map[int]float64)
 	for _, cer := range cedears {
-		mapTStoValue  := make(map[int]float64) 
-		
+		mapTStoValue := make(map[int]float64)
+
 		values := ced.Historical(cer, start, end)
 
-		for timeStamp, val := range values{
+		for timeStamp, val := range values {
 			mapTStoValue[timeStamp] = val
 		}
 
-		mapAssetNametoTimeValues[cer.Ticket] = mapTStoValue 
+		mapAssetNametoTimeValues[cer.Ticket] = mapTStoValue
 	}
 
 	var assetNames []string
@@ -60,7 +74,7 @@ func GetPrices(fileAssetNames string, start, end datetime.Datetime) (*mat.Dense,
 	for assetName, map__ := range mapAssetNametoTimeValues {
 		assetNames[i] = assetName
 		i++
-		for ts, val := range map__{
+		for ts, val := range map__ {
 			mapTStoVals[ts] = append(mapTStoVals[ts], val)
 		}
 	}
@@ -71,12 +85,12 @@ func GetPrices(fileAssetNames string, start, end datetime.Datetime) (*mat.Dense,
 	}
 	sort.Ints(timestamps)
 
-	var b []float64	
+	var b []float64
 	for _, tss := range timestamps {
 		vals := mapTStoVals[tss]
 		if len(vals) == len(mapAssetNametoTimeValues) {
 			for _, val := range vals {
-            	b = append(b, val)
+				b = append(b, val)
 			}
 		}
 	}
@@ -89,14 +103,14 @@ func EqualComposition(numberOfAssets int) *mat.VecDense {
 
 	var data []float64
 	for i := 0; i < numberOfAssets; i++ {
-		data = append(data, 1.0 / float64(numberOfAssets) )				
-	} 
-	vv := mat.NewVecDense(numberOfAssets, data )
+		data = append(data, 1.0/float64(numberOfAssets))
+	}
+	vv := mat.NewVecDense(numberOfAssets, data)
 
 	return vv
 }
 
-func CalcVarianceByComposition(cov mat.SymDense, comp mat.VecDense) float64{
+func CalcVarianceByComposition(cov mat.SymDense, comp mat.VecDense) float64 {
 	cN, _ := cov.Dims()
 
 	cc := mat.NewVecDense(cN, nil)
@@ -105,8 +119,8 @@ func CalcVarianceByComposition(cov mat.SymDense, comp mat.VecDense) float64{
 	dd := mat.NewVecDense(1, nil)
 
 	dd.MulVec(comp.T(), cc)
- 
-	return dd.At(0,0)
+
+	return dd.At(0, 0)
 }
 
 func RandomComposition(comp mat.VecDense) {
@@ -114,64 +128,139 @@ func RandomComposition(comp mat.VecDense) {
 	rN, _ := comp.Dims()
 
 	for i := 0; i < rN; i++ {
-		comp.SetVec(i, rand.Float64())
+		comp.SetVec(i, getRand())
 	}
 
 	s := mat.Sum(&comp)
-	
+
 	for i := 0; i < rN; i++ {
-		comp.SetVec(i, comp.AtVec(i) / s)
+		comp.SetVec(i, comp.AtVec(i)/s)
 	}
 
 }
 
+func MC02(numberOfAssets int, meanReturnVec *mat.VecDense, cov *mat.SymDense) *mat.VecDense {
+	compositionVec := EqualComposition(numberOfAssets)
+	variance := CalcVarianceByComposition(*cov, *compositionVec)
+	returns := quant.Returns(meanReturnVec, compositionVec)
+	einic := returns / variance
+	diff_e := 1000.0
+
+	fmt.Printf("\n return %f variance %f %f \n", returns, variance, einic)
+
+	MM := 0
+	NN := 0
+	newCompositionVec := EqualComposition(numberOfAssets)
+	for j := 0; j < 18000000; j++ {
+		RandomComposition(*newCompositionVec)
+		new_variance := CalcVarianceByComposition(*cov, *newCompositionVec)
+		new_returns := quant.Returns(meanReturnVec, newCompositionVec)
+		new_e := new_returns / new_variance
+
+		if new_e > einic {
+			variance = new_variance
+			compositionVec.CopyVec(newCompositionVec)
+			returns = new_returns
+			einic = new_e
+		} else {
+			MM++
+			e := math.Exp(-1 * new_variance / new_returns)
+			r := rand.Float64()
+
+			if r > e {
+				NN++
+				variance = new_variance
+				compositionVec.CopyVec(newCompositionVec)
+				returns = new_returns
+				einic = new_e
+			}
+		}
+		if j%1000000 == 0 {
+			fmt.Printf("\n return %f variance %f %f \n", returns, variance, einic)
+		}
+
+	}
+
+	fmt.Printf("\n return %f variance %f %f %f\n", returns, variance, einic, diff_e)
+
+	fmt.Println(MM, NN)
+
+	return newCompositionVec
+}
+
+func MC(numberOfAssets int, meanReturnVec *mat.VecDense, cov *mat.SymDense) *mat.VecDense {
+	compositionVec := EqualComposition(numberOfAssets)
+	variance := CalcVarianceByComposition(*cov, *compositionVec)
+	returns := quant.Returns(meanReturnVec, compositionVec)
+	einic := returns / variance
+	diff_e := 1000.0
+
+	fmt.Printf("\n return %f variance %f %f \n", returns, variance, einic)
+
+	MM := 0
+	NN := 0
+	newCompositionVec := EqualComposition(numberOfAssets)
+	for j := 0; j < 18000000; j++ {
+		RandomComposition(*newCompositionVec)
+		new_variance := CalcVarianceByComposition(*cov, *newCompositionVec)
+		new_returns := quant.Returns(meanReturnVec, newCompositionVec)
+		new_e := new_returns / new_variance
+
+		if new_e > einic {
+			variance = new_variance
+			compositionVec.CopyVec(newCompositionVec)
+			returns = new_returns
+			einic = new_e
+		}
+
+		if j%1000000 == 0 {
+			fmt.Printf("\n return %f variance %f %f \n", returns, variance, einic)
+		}
+
+	}
+
+	fmt.Printf("\n return %f variance %f %f %f\n", returns, variance, einic, diff_e)
+
+	fmt.Println(MM, NN)
+
+	return newCompositionVec
+}
+
+var r = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+//Generates random int as function of range
+func getRand() float64 {
+	return r.Float64()
+}
+
 func main() {
 	rand.Seed(1)
-    start := datetime.Datetime{Month: 5, Day: 14, Year: 2020}
-	end := datetime.Datetime{Month: 6, Day: 14, Year: 2021}
+	start := datetime.Datetime{Month: 5, Day: 14, Year: 2021}
+	end := datetime.Datetime{Month: 6, Day: 15, Year: 2021}
 
-	file := "../csvs/pep.csv"
-
+	file := "test.csv"
 	prices, assetNames := GetPrices(file, start, end)
+	ndata, numberOfAssets := prices.Dims()
+	fmt.Printf("days %d tickets %d %s\n", ndata, numberOfAssets, assetNames)
 
-	_, numberOfAssets := prices.Dims()
-
-	quant.MatPrint("final", prices)
+	quant.MatPrint("prices", prices)
 
 	logReturn := quant.LogReturn(prices)
 	cov := quant.Covariance(&logReturn)
-
+	meanReturnVec := quant.Mean(&logReturn)
 	quant.MatPrint("cov", &cov)
+	quant.MatPrint("meanReturns", &meanReturnVec)
 
-	composition := EqualComposition(numberOfAssets)
-
-	variance := CalcVarianceByComposition(cov, *composition)
-
-	new_composition := EqualComposition(numberOfAssets)
-	for j := 0; j < 1000000; j++ {
-		RandomComposition(*composition)
-		new_variance := CalcVarianceByComposition(cov, *composition)
-		if new_variance < variance {
-			variance = new_variance
-			new_composition.CopyVec(composition)
-		}
-	}
-	fmt.Printf("\n variance %.4v \n",variance)
-
+	// newCompositionVec := MC(numberOfAssets, &meanReturnVec, &cov)
+	newCompositionVec := mat.NewVecDense(numberOfAssets, nil)
 	for i, asNa := range assetNames {
-		fmt.Printf("%8s %8.2f\n", asNa, 100*new_composition.AtVec(i))		
+		fmt.Printf("%8s %8.2f\n", asNa, 100*newCompositionVec.AtVec(i))
 	}
 
-	nP := mat.NewDense(8, 2, nil)
-	
-	for i := 0; i < 8; i++ {
-		for j := 0;  j < 2; j++  {
-			nP.Set(i, j, float64(i*(j+1)))
-		}
-	}
-		
+	p1 := pcca.NewPCA(3)
 
-	normal := quant.Normalize(nP)
+    rows, cols := p1.FitTransform(&logReturn).Dims()
 
-	quant.MatPrint("normal", normal)
+	fmt.Println(rows, cols)
+
 }
