@@ -3,16 +3,13 @@ module github.com/lmpizarro/go-finance
 go 1.15
 
 require (
-	github.com/antchfx/htmlquery v1.2.3 // indirect
-	github.com/antchfx/xmlquery v1.3.4 // indirect
-	github.com/gobwas/glob v0.2.3 // indirect
-	github.com/gocolly/colly v1.2.0
-	github.com/golang/protobuf v1.4.3 // indirect
-	github.com/kennygrant/sanitize v1.2.4 // indirect
-	github.com/micro/go-micro v1.18.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/kr/pretty v0.1.0 // indirect
 	github.com/montanaflynn/stats v0.6.4
 	github.com/piquette/finance-go v1.0.0
 	github.com/shopspring/decimal v1.2.0
-	github.com/sjwhitworth/golearn v0.0.0-20210511113939-00d4cfd91a1b
+	github.com/stretchr/testify v1.5.1 // indirect
+	golang.org/x/exp v0.0.0-20200331195152-e8c3332aa8e5 // indirect
 	gonum.org/v1/gonum v0.9.1
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 )

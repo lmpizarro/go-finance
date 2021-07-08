@@ -27,8 +27,10 @@ func main() {
 	end := datetime.Datetime{Month: 6, Day: 4, Year: 2021}
 
 	for _, cear := range cedears {
-		fmt.Println(cear)
+		fmt.Println("CEDEAR ", cear)
 		values := cedear.Historical(cear, start, end)
+
+		fmt.Println(values)
 
 		for timestamp, v := range values {
 			kj := strconv.FormatInt(int64(timestamp), 10)

@@ -8,12 +8,15 @@ import (
 	"time"
 
 	"github.com/lmpizarro/go-finance/pkg/quant"
+
 	"gonum.org/v1/gonum/mat"
 
 	ced "github.com/lmpizarro/go-finance/pkg/cedear"
 	"github.com/piquette/finance-go/datetime"
 
-	pcca "github.com/sjwhitworth/golearn/pca"
+	// pcca "github.com/sjwhitworth/golearn/pca"
+
+	"gonum.org/v1/gonum/stat"
 )
 
 func test() {
@@ -234,7 +237,7 @@ func getRand() float64 {
 }
 
 func main() {
-	rand.Seed(1)
+	// rand.Seed(1)
 	start := datetime.Datetime{Month: 5, Day: 14, Year: 2021}
 	end := datetime.Datetime{Month: 6, Day: 15, Year: 2021}
 
@@ -251,16 +254,20 @@ func main() {
 	quant.MatPrint("cov", &cov)
 	quant.MatPrint("meanReturns", &meanReturnVec)
 
-	// newCompositionVec := MC(numberOfAssets, &meanReturnVec, &cov)
-	newCompositionVec := mat.NewVecDense(numberOfAssets, nil)
+	newCompositionVec := MC(numberOfAssets, &meanReturnVec, &cov)
+	// newCompositionVec := mat.NewVecDense(numberOfAssets, nil)
 	for i, asNa := range assetNames {
 		fmt.Printf("%8s %8.2f\n", asNa, 100*newCompositionVec.AtVec(i))
 	}
 
-	p1 := pcca.NewPCA(3)
+	var ppcc stat.PC
 
-    rows, cols := p1.FitTransform(&logReturn).Dims()
-
-	fmt.Println(rows, cols)
-
+	rN, cN := logReturn.Dims()
+	scaled := mat.NewDense(rN, cN, nil)
+	scaled.Scale(100.0, &logReturn)
+	ok := ppcc.PrincipalComponents(scaled, nil)
+	if !ok {
+		return
+	}
+	fmt.Printf("variances = %.4f\n\n", ppcc.VarsTo(nil))
 }
